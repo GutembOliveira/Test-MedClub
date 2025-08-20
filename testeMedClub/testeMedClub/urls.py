@@ -17,16 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from rest_framework import routers
 from django.urls import path,include
+from usuarios.views import LoginView
 from itens import views as ItemViewSet
+from usuarios import views as UsuarioViewSet
 from itens.api.serializers import ItemSerializer
+from usuarios.serializer import UsuarioSerializer
 from rest_framework.routers import DefaultRouter
 route = DefaultRouter()
 
 route.register(r'items',ItemViewSet.ItemViewSet, basename='item')
+route.register(r'usuarios',UsuarioViewSet.UsuarioViewSet, basename='usuario')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(route.urls)),
+    path('login/', LoginView.as_view(), name="login"),
+    
 ]
-
 
 
