@@ -8,6 +8,7 @@ from usuarios.models import usuario
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = usuario.objects.all()
@@ -31,7 +32,11 @@ class LoginView(APIView):
             return Response({"erro": "Usuário não encontrado"}, status=404)
 
 
-        if check_password(senha, usuario.nome):
-            return Response({"mensagem": "Login bem-sucedido"})
-        else:
+        if (check_password(senha, user.senha)==False):
             return Response({"erro": "Senha incorreta"}, status=401)
+        
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        })
