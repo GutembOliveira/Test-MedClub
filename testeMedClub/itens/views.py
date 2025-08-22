@@ -3,14 +3,14 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from itens.api import serializers
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from itens import models
 from itens.models import item 
 from rest_framework import viewsets, permissions
 
 class ItemViewSet(viewsets.ModelViewSet):
-    queryset = serializers.ItemSerializer.Meta.model.objects.all()
     serializer_class = serializers.ItemSerializer
-   
+    queryset = item.objects.all() 
     
     def perform_create(self, serializer):
         serializer.save()  # You can add custom logic here if needed
@@ -18,6 +18,9 @@ class ItemViewSet(viewsets.ModelViewSet):
      # Rota GET /items/todos/
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def todos(self, request):
+        user = request.user
+        if not getattr(user, "is_admin", False):
+            raise PermissionDenied("Apenas usuários admin podem acessar esta rota.")
         items = item.objects.all()  # pega todos os itens
         serializer = self.get_serializer(items, many=True)
         return Response(serializer.data)

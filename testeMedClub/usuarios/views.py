@@ -1,40 +1,48 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from rest_framework import permissions
+from rest_framework.decorators import action
+from usuarios.models import Usuario
+from .serializer import UsuarioSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework import viewsets
-from usuarios.serializer import LoginSerializer, UsuarioSerializer
-from usuarios.models import usuario
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.hashers import check_password
-from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
+from django.contrib.auth.hashers import check_password
 
 class UsuarioViewSet(viewsets.ModelViewSet):
-    queryset = usuario.objects.all()
+    queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
 
     def perform_create(self, serializer):
-        senha = make_password(serializer.validated_data['senha'])
-        serializer.validated_data['senha'] = senha
-        serializer.save(senha=senha)  # Save the hashed password
+        # Permite usar o create do serializer que já faz validação de admin
+        serializer.save()
 
+    @action(detail=False, methods=['get'])
+    def todos(self, request):
+        user = request.user
+        usuarios = Usuario.objects.all()  # pega todos os itens
+        serializer = self.get_serializer(usuarios, many=True)
+        return Response(serializer.data)
 
 class LoginView(APIView):
+    permission_classes = []  # libera o login sem autenticação
+
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        nome = serializer.validated_data['nome']
-        senha = serializer.validated_data['senha']
+        email = request.data.get("email")
+        senha = request.data.get("senha")
+
+        if not email or not senha:
+            return Response({"erro": "Email e senha são obrigatórios"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            user = usuario.objects.get(nome=nome)
-        except usuario.DoesNotExist:
-            return Response({"erro": "Usuário não encontrado"}, status=404)
+            user = Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            return Response({"erro": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
+        if not user.check_password(senha):
+            return Response({"erro": "Senha incorreta"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if (check_password(senha, user.senha)==False):
-            return Response({"erro": "Senha incorreta"}, status=401)
-        
         refresh = RefreshToken.for_user(user)
         return Response({
             "refresh": str(refresh),

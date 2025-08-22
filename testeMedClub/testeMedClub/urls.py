@@ -20,6 +20,7 @@ from django.urls import path,include
 from usuarios.views import LoginView
 from itens import views as ItemViewSet
 from usuarios import views as UsuarioViewSet
+from pedidos import views as PedidoViewSet
 from itens.api.serializers import ItemSerializer
 from usuarios.serializer import UsuarioSerializer
 from rest_framework.routers import DefaultRouter
@@ -29,6 +30,7 @@ route = DefaultRouter()
 
 route.register(r'items',ItemViewSet.ItemViewSet, basename='item')
 route.register(r'usuarios',UsuarioViewSet.UsuarioViewSet, basename='usuario')
+route.register(r'pedidos', PedidoViewSet.PedidoViewSet, basename='pedido')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(route.urls)),
