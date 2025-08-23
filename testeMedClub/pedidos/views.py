@@ -5,15 +5,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 
-
 class PedidoViewSet(viewsets.ModelViewSet):
     serializer_class = PedidoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Pedido.objects.filter(usuario=self.request.user)
-
-
 
 
 

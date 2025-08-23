@@ -1,7 +1,7 @@
 import uuid
 from django.db import models
 from usuarios.models import Usuario
-from itens.models import item  # app de itens
+from itens.models import item 
 
 
 class Pedido(models.Model):
